@@ -17,11 +17,6 @@ public class DividendApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(DividendApplication.class, args);
-
-//        YahooFinanceScraper scraper = new YahooFinanceScraper();
-////        var result = scraper.scrap(Company.builder().ticker("O").build());
-//        var result = scraper.scrapCompanyByTicker("MMM");
-//        System.out.println(result);
     }
 
 }
