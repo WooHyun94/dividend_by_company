@@ -1,10 +1,13 @@
 package zerobase.dividend.service;
 
 import lombok.AllArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import zerobase.dividend.exception.impl.NoCompanyException;
 import zerobase.dividend.model.Company;
 import zerobase.dividend.model.Dividend;
 import zerobase.dividend.model.ScrapedResult;
+import zerobase.dividend.model.constants.CacheKey;
 import zerobase.dividend.persist.CompanyRepository;
 import zerobase.dividend.persist.DividendRepository;
 import zerobase.dividend.persist.entity.CompanyEntity;
@@ -21,10 +24,11 @@ public class FinanceService {
     private final CompanyRepository companyRepository;
     private final DividendRepository dividendRepository;
 
+    @Cacheable(key = "#companyName", value = CacheKey.KEY_FINANCE)
     public ScrapedResult getDividendByCompanyName(String companyName){
         // 회사명을 기준으로 회사 정보를 조회
         CompanyEntity company = this.companyRepository.findByName(companyName)
-                                                        .orElseThrow(() -> new RuntimeException("존재하지 않는 회사명입니다."));
+                                                        .orElseThrow(() -> new NoCompanyException());
 
 
         // 조회된 회사 ID로 배당금 정보 조회
@@ -32,16 +36,10 @@ public class FinanceService {
         List<Dividend> dividends = new ArrayList<>();
 
         for(var entity : dividendEntities){
-            dividends.add(Dividend.builder()
-                                .date(entity.getDate())
-                                .dividend(entity.getDividend())
-                                .build());
+            dividends.add(new Dividend(entity.getDate(), entity.getDividend()));
         }
 
         // 결과 조합 후 반환
-        return new ScrapedResult(Company.builder()
-                                        .ticker((company.getTicker()))
-                                        .name(company.getName()).build(),
-                                dividends);
+        return new ScrapedResult(new Company(company.getTicker(), company.getName()), dividends);
     }
 }
